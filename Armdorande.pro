@@ -11,15 +11,23 @@ TEMPLATE = app
 
 
 SOURCES += main.cpp\
-        armdorande.cpp \
     force.cpp \
-    jedi.cpp
+    jedi.cpp \
+    armdorandetest.cpp
 
-HEADERS  += armdorande.h \
+HEADERS  += \
     force.h \
-    jedi.h
+    jedi.h \
+    armdorandetest.h
 
-FORMS    += armdorande.ui
+FORMS    += \
+    armdorandetest.ui
+
+
+
+
+
+
 
 
 
