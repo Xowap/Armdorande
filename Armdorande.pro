@@ -23,12 +23,3 @@ HEADERS  += \
 FORMS    += \
     armdorandetest.ui
 
-
-
-
-
-
-
-
-
-

@@ -29,6 +29,10 @@ Force::Force(QObject *parent) :
 	emit stateChanged(WaitingForAction);
 }
 
+Force::~Force() {
+	retreat();
+}
+
 void Force::processDatagrams() {
 	while(s.hasPendingDatagrams()) {
 		QHostAddress from;
@@ -106,6 +110,7 @@ void Force::processDefy(QDataStream *ds, QHostAddress *from) {
 	if(state == WaitingForAction) {
 		Jedi *j = jediMap[*from];
 		if(j) {
+			op = j;
 			setState(FightingClient);
 			emit gotEngagedWith(j);
 		}
@@ -134,10 +139,6 @@ void Force::processSaber(QDataStream *ds, QHostAddress *from) {
 				s.writeDatagram(ba, op->host(), udpPort);
 			}
 
-
-			enum FightState {
-				WaitingForAction, FightingClient, FightingServer
-			};
 			emit gotSaberUpdate(original ? j : jediIndex[0], x, y, z);
 		}
 	}
@@ -162,10 +163,10 @@ void Force::engageWith(int id) {
 		if(op) {
 			QByteArray ba = makeMessage(DefyYou, &defy);
 			s.writeDatagram(ba, op->host(), udpPort);
-		}
 
-		setState(FightingServer);
-		emit gotEngagedWith(op);
+			setState(FightingServer);
+			emit gotEngagedWith(op);
+		}
 	}
 }
 

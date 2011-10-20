@@ -31,9 +31,10 @@ class Force : public QObject
     Q_OBJECT
 public:
     explicit Force(QObject *parent = 0);
+	~Force();
 
 	enum FightState {
-		WaitingForAction, FightingClient, FightingServer
+		WaitingForAction = 1, FightingClient, FightingServer
 	};
 	static const int FightBit = 0x2;
 

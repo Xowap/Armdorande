@@ -12,6 +12,7 @@ ArmdorandeTest::ArmdorandeTest(QWidget *parent) :
 
 	connect(f, SIGNAL(stateChanged(Force::FightState)), this, SLOT(stateChanged(Force::FightState)));
 	connect(f, SIGNAL(gotJedi(Jedi*)), this, SLOT(gotJedi(Jedi*)));
+	connect(f, SIGNAL(gotSaberUpdate(Jedi*,double,double,double)), this, SLOT(gotSaberUpdate(Jedi*,double,double,double)));
 }
 
 ArmdorandeTest::~ArmdorandeTest()
@@ -20,7 +21,7 @@ ArmdorandeTest::~ArmdorandeTest()
 }
 
 void ArmdorandeTest::stateChanged(Force::FightState s) {
-	QString states[3] = { "Waiting", "Fighting (Client)", "Fighting (Server)" };
+	QString states[4] = { 0, "Waiting", "Fighting (Client)", "Fighting (Server)" };
 	displayMessage("State Changed: " + states[s]);
 }
 
@@ -46,6 +47,10 @@ void ArmdorandeTest::gotSaberUpdate(Jedi *j, double x, double y, double z) {
 
 void ArmdorandeTest::on_pushButton_clicked()
 {
+	if(!ui->oponents->count()) {
+		return;
+	}
+
 	int id = ui->oponents->itemData(ui->oponents->currentIndex()).toInt();
 
 	f->engageWith(id);
@@ -54,4 +59,9 @@ void ArmdorandeTest::on_pushButton_clicked()
 void ArmdorandeTest::on_pushButton_3_clicked()
 {
 	f->updateSaber(ui->x->value(), ui->y->value(), ui->z->value());
+}
+
+void ArmdorandeTest::on_pushButton_2_clicked()
+{
+	f->retreat();
 }
