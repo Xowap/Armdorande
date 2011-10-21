@@ -1,0 +1,8 @@
+<RCC>
+    <qresource prefix="/texts">
+        <file alias="intro.txt">assets/intro.txt</file>
+    </qresource>
+    <qresource prefix="/images">
+        <file alias="stars.png">assets/stars.png</file>
+    </qresource>
+</RCC>

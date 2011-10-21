@@ -18,30 +18,47 @@ Force::Force(QObject *parent) :
 	jediMap[j->host()] = j;
 
 	// Create UDP listening socket
-	s.bind(udpPort, QUdpSocket::ShareAddress);
-	connect(&s, SIGNAL(readyRead()), this, SLOT(processDatagrams()));
+	foreach(QHostAddress ia, QNetworkInterface::allAddresses()) {
+		if(ia != ia.LocalHost && ia.protocol() == QAbstractSocket::IPv4Protocol) {
+			s_out.bind(ia, udpPort, QUdpSocket::ShareAddress);
+			break;
+		}
+	}
+
+	s_in.bind(udpPort, QUdpSocket::ShareAddress);
+
+	connect(&s_in, SIGNAL(readyRead()), this, SLOT(processDatagramsIn()));
+	connect(&s_out, SIGNAL(readyRead()), this, SLOT(processDatagramsOut()));
 
 	// Advertisment timer
 	advTimer.setInterval(100);
 	connect(&advTimer, SIGNAL(timeout()), this, SLOT(advertise()));
 	advTimer.start();
 
-	emit stateChanged(WaitingForAction);
+	setState(WaitingForAction);
 }
 
 Force::~Force() {
 	retreat();
 }
 
-void Force::processDatagrams() {
-	while(s.hasPendingDatagrams()) {
+void Force::processDatagramsIn() {
+	processDatagrams(&s_in);
+}
+
+void Force::processDatagramsOut() {
+	processDatagrams(&s_out);
+}
+
+void Force::processDatagrams(QUdpSocket *s) {
+	while(s->hasPendingDatagrams()) {
 		QHostAddress from;
 		QByteArray ba;
 		MessageType t;
 		quint8 ver, t_uint;
 
-		ba.resize(s.pendingDatagramSize());
-		s.readDatagram(ba.data(), ba.size(), &from);
+		ba.resize(s->pendingDatagramSize());
+		s->readDatagram(ba.data(), ba.size(), &from);
 
 		QDataStream ds(ba);
 		ds.setByteOrder(QDataStream::LittleEndian);
@@ -136,7 +153,7 @@ void Force::processSaber(QDataStream *ds, QHostAddress *from) {
 				msg.original = false;
 
 				QByteArray ba = makeMessage(SaberMoved, &msg);
-				s.writeDatagram(ba, op->host(), udpPort);
+				s_out.writeDatagram(ba, op->host(), udpPort);
 			}
 
 			emit gotSaberUpdate(original ? j : jediIndex[0], x, y, z);
@@ -162,7 +179,7 @@ void Force::engageWith(int id) {
 
 		if(op) {
 			QByteArray ba = makeMessage(DefyYou, &defy);
-			s.writeDatagram(ba, op->host(), udpPort);
+			s_out.writeDatagram(ba, op->host(), udpPort);
 
 			setState(FightingServer);
 			emit gotEngagedWith(op);
@@ -173,7 +190,7 @@ void Force::engageWith(int id) {
 void Force::retreat() {
 	if((state & FightBit) && op) {
 		QByteArray ba = makeMessage(PissedOnMyself);
-		s.writeDatagram(ba, op->host(), udpPort);
+		s_out.writeDatagram(ba, op->host(), udpPort);
 
 		setState(WaitingForAction);
 		emit gotCoward(op);
@@ -190,22 +207,22 @@ void Force::updateSaber(double x, double y, double z) {
 			msg.original = true;
 
 			QByteArray ba = makeMessage(SaberMoved, &msg);
-			s.writeDatagram(ba, op->host(), udpPort);
+			s_out.writeDatagram(ba, op->host(), udpPort);
 		}
 
 		if(state == FightingServer) {
-			emit gotSaberUpdate(0, x, y, z);
+			emit gotSaberUpdate(jediIndex[0], x, y, z);
 		}
 	}
 }
 
 void Force::advertise() {
-	if(state == WaitingForAction) {
+		if(state == WaitingForAction) {
 		ForceMessagePresence msg;
 		msg.name = selfName;
 
 		QByteArray ba = makeMessage(AnnouncePresence, &msg);
-		s.writeDatagram(ba, QHostAddress(QHostAddress::Broadcast), udpPort);
+		s_out.writeDatagram(ba, QHostAddress(QHostAddress::Broadcast), udpPort);
 	}
 }
 

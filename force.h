@@ -41,7 +41,7 @@ public:
 private:
 	QVector<Jedi*> jediIndex;
 	QHash<QHostAddress, Jedi*> jediMap;
-	QUdpSocket s;
+	QUdpSocket s_in, s_out;
 	QString selfName;
 	QTimer advTimer;
 	Jedi *op;
@@ -76,7 +76,9 @@ public slots:
 	void advertise();
 
 private slots:
-	void processDatagrams();
+	void processDatagrams(QUdpSocket *s);
+	void processDatagramsIn();
+	void processDatagramsOut();
 	void setState(Force::FightState s);
 };
 
